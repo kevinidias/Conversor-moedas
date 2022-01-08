@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import { View, StyleSheet, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, TextInput, TouchableOpacity, ActivityIndicator, Keyboard } from 'react-native';
 
 import Picker from './src/components/Picker';
 import api from './src/services/api';
@@ -11,6 +11,9 @@ export default function conversor() {
 
   const [moedaSelecionada, setMoedaSelecionada] = useState(null);
   const [moedaBvalor, setMoedaBValor] = useState(0);
+
+  const [valorMoeda, setValorMoeda] = useState(null);
+  const [valorConvertido, setValorConvertido] = useState(0);
 
   useEffect(() =>{
     async function loadMoedas() {
@@ -31,6 +34,21 @@ export default function conversor() {
     }
     loadMoedas();
   }, []);
+
+  async function converter() {
+    if(moedaSelecionada === null || moedaBvalor === 0){
+      alert('Por favor selecione uma moeda.');
+      return;
+    }
+
+    const response = await api.get(`all/${moedaSelecionada}-BRL`);
+
+    let resultado = (response.data[moedaSelecionada].ask * parseFloat(moedaBvalor));
+    setValorConvertido(`R$ ${resultado.toFixed(2)}`);
+    setValorMoeda(moedaBvalor)
+
+    Keyboard.dismiss();
+  }
 
  if(loading) {
    return(
@@ -58,21 +76,24 @@ export default function conversor() {
         />
       </View>
  
-      <TouchableOpacity style={styles.botaoArea}>
+      <TouchableOpacity style={styles.botaoArea} onPress={converter}>
         <Text style={styles.botaoTexto}>Converter</Text>
       </TouchableOpacity>
  
+      {valorConvertido !== 0 && (
       <View style={styles.areaResultado}>
-       <Text style={styles.valorConvertido}>
-         3 USD
-       </Text>
-       <Text style={[styles.valorConvertido, {fontSize: 18, margin: 10}]}>
-         Corresponde a 
-       </Text>
-       <Text style={styles.valorConvertido}>
-         19,90
-       </Text>
+        <Text style={styles.valorConvertido}>
+          {valorMoeda} {moedaSelecionada} 
+        </Text>
+        <Text style={[styles.valorConvertido, {fontSize: 18, margin: 10}]}>
+          Corresponde a 
+        </Text>
+        <Text style={styles.valorConvertido}>
+          {valorConvertido}
+        </Text>
       </View>
+      )}
+ 
     </View>
    );
  }
